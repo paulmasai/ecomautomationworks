@@ -1,0 +1,22 @@
+name = "mobdeals-meta-automation-suite"
+main = "src/index.ts"
+compatibility_date = "2026-08-02"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "development"
+LOG_LEVEL = "debug"
+OUTBOUND_ACTIONS_ENABLED = "false"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+LOG_LEVEL = "info"
+OUTBOUND_ACTIONS_ENABLED = "false"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+LOG_LEVEL = "info"
+OUTBOUND_ACTIONS_ENABLED = "false"
+
+# Queue bindings and the Cron Trigger are introduced with their processors in
+# phases 3-5. Until then, meta_webhook_events is the durable database queue.

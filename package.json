@@ -1,0 +1,28 @@
+{
+  "name": "mobdeals-meta-automation-suite",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Facebook Page automation service for MobDeals Kenya.",
+  "scripts": {
+    "build": "WRANGLER_LOG_PATH=wrangler.log wrangler deploy --dry-run --outdir dist --env=\"\"",
+    "check": "tsc --noEmit",
+    "dev": "WRANGLER_LOG_PATH=wrangler.log wrangler dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy:staging": "WRANGLER_LOG_PATH=wrangler.log wrangler deploy --env staging",
+    "deploy:production": "WRANGLER_LOG_PATH=wrangler.log wrangler deploy --env production"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260801.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.118.0"
+  }
+}
