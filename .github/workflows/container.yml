@@ -84,6 +84,56 @@ jobs:
           provenance: mode=max
           sbom: true
 
+      - name: Pull and smoke test published image
+        env:
+          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+        run: |
+          set -eu
+
+          smoke_vars="${RUNNER_TEMP}/mobdeals-container-smoke.dev.vars"
+          smoke_container="mobdeals-meta-automation-smoke"
+
+          cleanup() {
+            docker rm --force "${smoke_container}" >/dev/null 2>&1 || true
+            rm -f "${smoke_vars}"
+          }
+          trap cleanup EXIT
+
+          umask 077
+          printf '%s\n' \
+            'SUPABASE_URL="https://example.supabase.co"' \
+            'SUPABASE_SERVICE_ROLE_KEY="smoke-service-role-key-123456789"' \
+            'META_APP_ID="smoke-app-id"' \
+            'META_APP_SECRET="smoke-app-secret-123456789"' \
+            'META_PAGE_ID="smoke-page-id"' \
+            'META_PAGE_ACCESS_TOKEN="smoke-page-access-token-123456789"' \
+            'META_VERIFY_TOKEN="smoke-verify-token-123456789"' \
+            'META_GRAPH_API_VERSION="v99.0"' \
+            'INTERNAL_ADMIN_SECRET="smoke-admin-secret-123456789"' \
+            'ENVIRONMENT="development"' \
+            'LOG_LEVEL="error"' \
+            'OUTBOUND_ACTIONS_ENABLED="false"' \
+            > "${smoke_vars}"
+
+          docker pull "${IMAGE_REF}"
+          docker run --detach \
+            --name "${smoke_container}" \
+            --publish 127.0.0.1:18787:8787 \
+            --mount "type=bind,source=${smoke_vars},target=/app/.dev.vars,readonly" \
+            "${IMAGE_REF}"
+
+          health_response=""
+          for attempt in $(seq 1 30); do
+            if health_response=$(curl --fail --silent --show-error http://127.0.0.1:18787/health 2>/dev/null); then
+              break
+            fi
+            sleep 1
+          done
+
+          printf '%s' "${health_response}" | grep --fixed-strings '"status":"ok"'
+          test "$(curl --fail --silent --show-error 'http://127.0.0.1:18787/webhooks/meta?hub.mode=subscribe&hub.verify_token=smoke-verify-token-123456789&hub.challenge=registry-challenge')" = "registry-challenge"
+          test "$(docker exec "${smoke_container}" id -u)" = "1000"
+
       - name: Publish digest summary
         run: |
           {

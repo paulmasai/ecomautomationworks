@@ -17,6 +17,7 @@ Cloudflare does not deploy this Docker image. Production and staging Worker depl
 - GitHub Actions and Docker Actions are pinned to immutable commit SHAs.
 - Published multi-platform images include BuildKit provenance and an SBOM attestation.
 - The workflow reports a `container/publish` commit status linked to the private Actions run.
+- Each published manifest is pulled back by digest and smoke-tested before the workflow reports success.
 
 ## Build locally
 
