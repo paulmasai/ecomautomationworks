@@ -23,8 +23,22 @@ jobs:
     permissions:
       contents: read
       packages: write
+      statuses: write
 
     steps:
+      - name: Report publication started
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api --silent \
+            --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            --raw-field state=pending \
+            --raw-field context=container/publish \
+            --raw-field description="Building and publishing the GHCR image" \
+            --raw-field target_url="${RUN_URL}"
+
       - name: Check out repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
@@ -79,3 +93,19 @@ jobs:
             echo "${REGISTRY}/${IMAGE_NAME}@${{ steps.build.outputs.digest }}"
             echo '```'
           } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Report publication result
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESULT: ${{ job.status == 'success' && 'success' || 'failure' }}
+          DESCRIPTION: ${{ job.status == 'success' && 'GHCR image published successfully' || 'GHCR image publication failed' }}
+        run: |
+          gh api --silent \
+            --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            --raw-field state="${RESULT}" \
+            --raw-field context=container/publish \
+            --raw-field description="${DESCRIPTION}" \
+            --raw-field target_url="${RUN_URL}"
