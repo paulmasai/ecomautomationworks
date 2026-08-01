@@ -65,6 +65,7 @@ Deployment commands require manual Cloudflare and secret configuration first. `O
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Containers and GHCR](docs/CONTAINERS.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
 - [Security](docs/SECURITY.md)
 
