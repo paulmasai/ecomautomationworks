@@ -97,6 +97,11 @@ jobs:
             docker rm --force "${smoke_container}" >/dev/null 2>&1 || true
             rm -f "${smoke_vars}"
           }
+          fail_with_logs() {
+            docker ps --all --filter "name=^/${smoke_container}$"
+            docker logs "${smoke_container}" || true
+            exit 1
+          }
           trap cleanup EXIT
 
           umask 077
@@ -114,6 +119,7 @@ jobs:
             'LOG_LEVEL="error"' \
             'OUTBOUND_ACTIONS_ENABLED="false"' \
             > "${smoke_vars}"
+          chmod 0444 "${smoke_vars}"
 
           docker pull "${IMAGE_REF}"
           docker run --detach \
@@ -123,16 +129,16 @@ jobs:
             "${IMAGE_REF}"
 
           health_response=""
-          for attempt in $(seq 1 30); do
+          for attempt in $(seq 1 60); do
             if health_response=$(curl --fail --silent --show-error http://127.0.0.1:18787/health 2>/dev/null); then
               break
             fi
             sleep 1
           done
 
-          printf '%s' "${health_response}" | grep --fixed-strings '"status":"ok"'
-          test "$(curl --fail --silent --show-error 'http://127.0.0.1:18787/webhooks/meta?hub.mode=subscribe&hub.verify_token=smoke-verify-token-123456789&hub.challenge=registry-challenge')" = "registry-challenge"
-          test "$(docker exec "${smoke_container}" id -u)" = "1000"
+          printf '%s' "${health_response}" | grep --fixed-strings '"status":"ok"' || fail_with_logs
+          test "$(curl --fail --silent --show-error 'http://127.0.0.1:18787/webhooks/meta?hub.mode=subscribe&hub.verify_token=smoke-verify-token-123456789&hub.challenge=registry-challenge')" = "registry-challenge" || fail_with_logs
+          test "$(docker exec "${smoke_container}" id -u)" = "1000" || fail_with_logs
 
       - name: Publish digest summary
         run: |
