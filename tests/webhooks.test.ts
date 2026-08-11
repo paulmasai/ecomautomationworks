@@ -28,6 +28,48 @@ describe("Worker routes", () => {
     });
   });
 
+  it("returns only the public Supabase dashboard configuration", async () => {
+    const app = createApp();
+    const execution = makeExecutionContext();
+    const response = await app(
+      new Request("https://worker.example/api/config"),
+      makeEnv(),
+      execution.context,
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      supabaseUrl: "https://example.supabase.co",
+      supabasePublishableKey: "test-publishable-key-123456789",
+    });
+  });
+
+  it("rejects unauthenticated dashboard API access before database work", async () => {
+    const app = createApp();
+    const execution = makeExecutionContext();
+    const response = await app(
+      new Request("https://worker.example/api/admin/session"),
+      makeEnv(),
+      execution.context,
+    );
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: "authentication_required" });
+  });
+
+  it("rejects staff bootstrap without the separate bootstrap secret", async () => {
+    const app = createApp();
+    const execution = makeExecutionContext();
+    const response = await app(
+      new Request("https://worker.example/api/bootstrap", { method: "POST" }),
+      makeEnv(),
+      execution.context,
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: "bootstrap_rejected" });
+  });
+
   it("returns the Meta challenge for a valid verification request", async () => {
     const app = createApp();
     const execution = makeExecutionContext();

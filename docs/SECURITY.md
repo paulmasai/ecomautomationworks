@@ -2,13 +2,13 @@
 
 ## Secrets
 
-The following values must be Cloudflare Worker secrets and must never be committed: `SUPABASE_SERVICE_ROLE_KEY`, `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN`, `META_VERIFY_TOKEN`, and `INTERNAL_ADMIN_SECRET`.
+The following values must be Cloudflare Worker secrets and must never be committed: `SUPABASE_SERVICE_ROLE_KEY`, `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN`, `META_VERIFY_TOKEN`, and `INTERNAL_ADMIN_SECRET`. `SUPABASE_PUBLISHABLE_KEY` is intentionally browser-safe but should still be supplied through environment configuration rather than hard-coded into source.
 
 The `.env.example` file contains placeholders only. Local values belong in the ignored `.dev.vars` file.
 
 ## Why the Worker uses the service-role credential
 
-There is no browser client and no public Supabase API surface in this architecture. The Worker performs trusted server-side inserts, atomic RPC calls, and automation updates. Its service-role key bypasses RLS by design, so compromise would grant broad database access. The key is therefore restricted to Cloudflare secrets, never returned by a route, and never written to logs. Rotation is required after suspected exposure.
+The staff dashboard uses the Supabase publishable key only for Auth. It sends the resulting access token to the Worker, which validates the user, active staff profile, permission, and MFA level before performing trusted server-side inserts, atomic RPC calls, and automation updates. The service-role key bypasses RLS by design, so compromise would grant broad database access. The key is therefore restricted to Cloudflare secrets, never returned by a route, and never written to logs. Rotation is required after suspected exposure.
 
 ## Webhook trust model
 
@@ -23,7 +23,7 @@ Webhook input remains untrusted even when it is transported over HTTPS. The Work
 
 ## Database access
 
-RLS is enabled for all application tables. No anon/authenticated table or function access is granted. Supabase Studio administration occurs through trusted project accounts. The public product image bucket permits reads required by Meta but does not include public upload, update, or delete policies.
+RLS is enabled for all application tables, including staff profiles. No anon/authenticated table or function access is granted; the authenticated dashboard reaches application data only through the Worker admin API. Supabase Studio administration occurs through trusted project accounts. The public product image bucket permits reads required by Meta but does not include public upload, update, or delete policies.
 
 ## Outbound safety
 

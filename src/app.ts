@@ -5,6 +5,11 @@ import {
 } from "./database/webhook-events";
 import { SupabaseDatabase } from "./database/supabase";
 import { createLogger } from "./logging/logger";
+import {
+  handleAdminApi,
+  handleDashboardConfig,
+  handleStaffBootstrap,
+} from "./routes/admin";
 import { handleHealth } from "./routes/health";
 import {
   handleMetaWebhookDelivery,
@@ -14,6 +19,7 @@ import type { Env } from "./types/env";
 import { jsonResponse } from "./utilities/http";
 
 export interface AppDependencies {
+  database?: SupabaseDatabase;
   webhookEventStore?: WebhookEventStore;
 }
 
@@ -29,9 +35,32 @@ export function createApp(dependencies: AppDependencies = {}) {
       const config = loadConfig(env);
       const logger = createLogger(config, { request_id: requestId });
       const url = new URL(request.url);
+      const database = dependencies.database ?? new SupabaseDatabase(config);
 
       if (request.method === "GET" && url.pathname === "/health") {
         return handleHealth(config);
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/config") {
+        return handleDashboardConfig(config);
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/bootstrap") {
+        return await handleStaffBootstrap(request, {
+          config,
+          database,
+          logger,
+          requestId,
+        });
+      }
+
+      if (url.pathname.startsWith("/api/admin/")) {
+        return await handleAdminApi(request, {
+          config,
+          database,
+          logger,
+          requestId,
+        });
       }
 
       if (url.pathname === "/webhooks/meta" && request.method === "GET") {
@@ -41,7 +70,7 @@ export function createApp(dependencies: AppDependencies = {}) {
       if (url.pathname === "/webhooks/meta" && request.method === "POST") {
         const store =
           dependencies.webhookEventStore ??
-          new SupabaseWebhookEventStore(new SupabaseDatabase(config));
+          new SupabaseWebhookEventStore(database);
 
         return await handleMetaWebhookDelivery(request, {
           config,

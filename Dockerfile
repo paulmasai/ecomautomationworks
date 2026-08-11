@@ -14,6 +14,7 @@ RUN chown node:node /app
 USER node
 
 COPY --chown=node:node package.json package-lock.json ./
+COPY --chown=node:node dashboard/package.json ./dashboard/package.json
 RUN npm ci
 
 FROM dependencies AS verification

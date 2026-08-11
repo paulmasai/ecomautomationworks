@@ -3,11 +3,16 @@
 .wrangler
 node_modules
 dist
+dashboard/dist
 coverage
 .dev.vars
 .env
 .env.*
 !.env.example
+.env_file
+graphify-out
+.playwright-cli
+output/playwright
 *.log
 *.pdf
 .DS_Store

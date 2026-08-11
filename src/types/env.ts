@@ -1,6 +1,7 @@
 export interface Env {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+  SUPABASE_PUBLISHABLE_KEY: string;
   META_APP_ID: string;
   META_APP_SECRET: string;
   META_PAGE_ID: string;

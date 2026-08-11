@@ -2,7 +2,7 @@
 
 ## System boundary
 
-This repository is an independent Cloudflare Worker. Supabase Studio is the administrative interface and Meta Business Suite is the human-support interface. There is no public website, custom dashboard, custom inbox, or always-running server.
+This repository is an independent Cloudflare Worker with a same-origin, staff-only operations dashboard. Supabase Studio remains available for trusted database administration and Meta Business Suite remains the human-support interface. There is no public customer website, custom Meta inbox, or always-running server.
 
 ```text
 Supabase Studio
@@ -10,6 +10,7 @@ Supabase Studio
         |
         v
 Supabase PostgreSQL + Storage <------> Cloudflare Worker
+                                         | same-origin authenticated staff SPA/API
                                          | HTTP: webhook ingress/internal routes
                                          | Cron: due posts and retry batches
                                          | Queue: asynchronous Meta events
@@ -26,6 +27,7 @@ Supabase PostgreSQL + Storage <------> Cloudflare Worker
 ## Runtime components
 
 - Router: exposes only health, Meta webhook, and authenticated internal operations routes.
+- Dashboard: serves a React SPA as Worker static assets and exposes `/api/admin/*` only after Supabase token validation, active staff lookup, RBAC, and privileged-role MFA checks.
 - Configuration: validates every Worker binding with Zod and never reports secret values.
 - Webhook ingress: verifies the exact raw body with `X-Hub-Signature-256`, validates the JSON shape, atomically stores it, and acknowledges Meta quickly.
 - Durable event ledger: `meta_webhook_events` is both the audit source and database queue fallback. Queue availability is an optimization, not a durability requirement.
@@ -92,7 +94,7 @@ The application checks are paired with database uniqueness constraints so concur
 
 - Only Meta webhooks and health are public in release one.
 - Internal operations require a separate secret and rate limiting.
-- The Supabase service-role key exists only as a Cloudflare secret because there is no browser client.
+- The Supabase service-role key exists only as a Cloudflare secret. The browser receives only the Supabase publishable key for Auth and never queries application tables directly.
 - RLS is enabled on every application table; anon and authenticated roles receive no grants.
 - Product images are public only so Meta can fetch explicitly published URLs. Public upload/update/delete policies are not created.
 - Raw webhook content is never logged. Tokens, secrets, authorization values, message bodies, and phone fields are redacted by key.

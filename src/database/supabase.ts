@@ -41,6 +41,37 @@ export class SupabaseDatabase {
     return (await response.json()) as T;
   }
 
+  async select<T>(
+    table: string,
+    query: Readonly<Record<string, string>>,
+  ): Promise<T[]> {
+    const search = new URLSearchParams(query);
+    const response = await fetch(
+      `${this.baseUrl}/rest/v1/${encodeURIComponent(table)}?${search.toString()}`,
+      { headers: this.headers },
+    );
+
+    if (!response.ok) throw new DatabaseError(response.status);
+    return (await response.json()) as T[];
+  }
+
+  async insert<T>(table: string, body: unknown): Promise<T[]> {
+    const response = await fetch(
+      `${this.baseUrl}/rest/v1/${encodeURIComponent(table)}`,
+      {
+        method: "POST",
+        headers: {
+          ...this.headers,
+          prefer: "return=representation",
+        },
+        body: JSON.stringify(body),
+      },
+    );
+
+    if (!response.ok) throw new DatabaseError(response.status);
+    return (await response.json()) as T[];
+  }
+
   async update(
     table: string,
     query: Readonly<Record<string, string>>,
@@ -60,5 +91,27 @@ export class SupabaseDatabase {
     );
 
     if (!response.ok) throw new DatabaseError(response.status);
+  }
+
+  async updateReturning<T>(
+    table: string,
+    query: Readonly<Record<string, string>>,
+    body: unknown,
+  ): Promise<T[]> {
+    const search = new URLSearchParams(query);
+    const response = await fetch(
+      `${this.baseUrl}/rest/v1/${encodeURIComponent(table)}?${search.toString()}`,
+      {
+        method: "PATCH",
+        headers: {
+          ...this.headers,
+          prefer: "return=representation",
+        },
+        body: JSON.stringify(body),
+      },
+    );
+
+    if (!response.ok) throw new DatabaseError(response.status);
+    return (await response.json()) as T[];
   }
 }

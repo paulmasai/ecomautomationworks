@@ -11,6 +11,7 @@ export function makeEnv(overrides: Partial<Env> = {}): Env {
   return {
     SUPABASE_URL: "https://example.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key-123456789",
+    SUPABASE_PUBLISHABLE_KEY: "test-publishable-key-123456789",
     META_APP_ID: "test-app-id",
     META_APP_SECRET: "test-app-secret-123456789",
     META_PAGE_ID: "test-page-id",

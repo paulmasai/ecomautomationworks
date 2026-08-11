@@ -1,6 +1,6 @@
 # MobDeals Meta Automation Suite
 
-Standalone Facebook Page automation for MobDeals Kenya, built for Cloudflare Workers, Supabase, and the Meta Graph API. It has no website, custom inbox, Render service, n8n dependency, payment flow, or AI-generated replies.
+Standalone Facebook Page automation for MobDeals Kenya, built for Cloudflare Workers, Supabase, and the Meta Graph API. It includes a staff-only operations dashboard but no customer website, custom Meta inbox, Render service, n8n dependency, payment flow, or AI-generated replies.
 
 ## Current build status
 
@@ -24,6 +24,7 @@ The current Worker provides:
 - optional Cloudflare Queue dispatch with a database-backed fallback
 - structured logs with sensitive-field redaction
 - a normalized release-one schema, RLS, indexes, and seed data
+- a responsive staff dashboard with Supabase Auth, role-aware read APIs, post drafting/approval, guarded automation controls, failures, audit history, and team access
 
 Outbound posting and replies are deliberately disabled. The repository has not been deployed and no real Meta or Supabase API operation is claimed.
 
@@ -39,6 +40,8 @@ npm test
 npm run dev
 ```
 
+Add the browser-safe `SUPABASE_PUBLISHABLE_KEY` to `.dev.vars` before starting the dashboard. The existing `.env.example` may be extended after any local uncommitted configuration change is reconciled.
+
 Use placeholder values locally. Do not commit `.dev.vars`, service-role keys, app secrets, or Page tokens.
 
 ## Database setup
@@ -47,7 +50,8 @@ Apply migrations in filename order, then apply the seed data:
 
 1. `migrations/0001_initial_schema.sql`
 2. `migrations/0002_product_images_bucket.sql`
-3. `seeds/0001_initial_data.sql`
+3. `migrations/0003_dashboard_staff_access.sql`
+4. `seeds/0001_initial_data.sql`
 
 The seed is safe by default: every outbound switch is off, maintenance mode is on, and the example product is inactive and out of stock.
 
@@ -57,6 +61,7 @@ The seed is safe by default: every outbound switch is off, maintenance mode is o
 - `npm test` — mocked Vitest suite; no real credentials required
 - `npm run build` — Cloudflare Worker dry-run build
 - `npm run dev` — local Wrangler development server
+- `npm run dev:dashboard` — Vite dashboard development server; use `/?demo=1` for the local mock preview
 - `npm run deploy:staging` — deploy the staging environment
 - `npm run deploy:production` — deploy the production environment
 
@@ -68,5 +73,6 @@ Deployment commands require manual Cloudflare and secret configuration first. `O
 - [Containers and GHCR](docs/CONTAINERS.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
 - [Security](docs/SECURITY.md)
+- [Staff dashboard](docs/DASHBOARD.md)
 
 The original 27-page specification remains in the repository as `MobDeals Kenya Facebook Automation Service (1).pdf`.

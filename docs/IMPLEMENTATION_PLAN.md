@@ -82,6 +82,19 @@ Status: partially started.
 - [ ] Deployment, operations, incident response, and rollback guides
 - [ ] End-to-end dry-run build and staging smoke tests
 
+## Staff operations dashboard
+
+Status: functional vertical slice implemented locally; live deployment and platform setup remain manual.
+
+- [x] Responsive same-origin Worker SPA with safe local preview data
+- [x] Supabase Auth login, password recovery, TOTP enrollment/challenge, staff profiles, and role permissions
+- [x] Read-only overview, catalogue, posts, failures, audit, and team APIs
+- [x] Post drafting and MFA-protected approval
+- [x] Guarded automation switches, retry requests, invitations, and access changes
+- [ ] Manual publish action after the Phase 3 publisher exists
+- [ ] Comment and Messenger statistics after Phases 4 and 5 normalize events
+- [ ] Staging Auth email, redirect, MFA, bootstrap, and role acceptance tests
+
 ## Release gates
 
 - No outbound action is enabled until its mocked tests pass.

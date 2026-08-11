@@ -3,12 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "dashboard"
+  ],
   "description": "Standalone Facebook Page automation service for MobDeals Kenya.",
   "scripts": {
-    "build": "WRANGLER_LOG_PATH=wrangler.log wrangler deploy --dry-run --outdir dist --env=\"\"",
-    "check": "tsc --noEmit",
-    "dev": "WRANGLER_LOG_PATH=wrangler.log wrangler dev",
-    "test": "vitest run",
+    "build": "npm run build:dashboard && WRANGLER_LOG_PATH=wrangler.log wrangler deploy --dry-run --outdir dist --env=\"\"",
+    "build:dashboard": "npm run build --workspace dashboard",
+    "check": "tsc --noEmit && npm run check --workspace dashboard",
+    "dev": "npm run build:dashboard && WRANGLER_LOG_PATH=wrangler.log wrangler dev",
+    "dev:dashboard": "npm run dev --workspace dashboard",
+    "test": "vitest run && npm run test --workspace dashboard",
     "test:watch": "vitest",
     "deploy:staging": "WRANGLER_LOG_PATH=wrangler.log wrangler deploy --env staging",
     "deploy:production": "WRANGLER_LOG_PATH=wrangler.log wrangler deploy --env production"

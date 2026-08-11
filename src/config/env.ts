@@ -10,6 +10,7 @@ const secret = z.string().min(16).max(4096);
 const environmentSchema = z.object({
   SUPABASE_URL: httpsUrl,
   SUPABASE_SERVICE_ROLE_KEY: secret,
+  SUPABASE_PUBLISHABLE_KEY: z.string().min(16).max(4096),
   META_APP_ID: z.string().min(1).max(256),
   META_APP_SECRET: secret,
   META_PAGE_ID: z.string().min(1).max(256),
