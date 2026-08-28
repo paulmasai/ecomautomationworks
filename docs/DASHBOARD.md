@@ -2,6 +2,8 @@
 
 The dashboard is a same-origin React SPA served through the existing Cloudflare Worker static-assets deployment. It is an internal operations console, not a customer website or replacement for Meta Business Suite.
 
+The [dashboard reference mockup](assets/dashboard-reference.jpeg) records the original visual direction. It is illustrative only; the implemented application and the requirements below remain authoritative.
+
 ## Current capability
 
 - Responsive overview with system/Page health, outbound state, approval and schedule counts, failures, handoffs, and recent audit activity.
@@ -9,15 +11,16 @@ The dashboard is a same-origin React SPA served through the existing Cloudflare 
 - Staff roles: owner, automation manager, content editor, support agent, and auditor.
 - Read-only product, post, failure, audit, and team views.
 - Post draft creation and MFA-protected approval.
+- MFA-protected publish-now, retry, and cancellation requests for eligible posts.
 - MFA-protected automation switches, failure retry requests, staff invitations, suspensions, and role changes.
 - Development-only mock preview at `http://localhost:5173/?demo=1`.
 
-Manual publication stays unavailable until Phase 3 supplies the Meta publisher. Comment and Messenger statistics stay unavailable until their normalized processors exist in Phases 4 and 5. Human replies continue in Meta Business Suite.
+Publish-now marks an approved post due for the Cron publisher; it does not bypass the environment or database kill switches, daily limits, inventory validation, or the publication ledger. Comment and Messenger statistics stay unavailable until their normalized processors exist in Phases 4 and 5. Human replies continue in Meta Business Suite.
 
 ## Local setup
 
 1. Install workspace dependencies with `npm ci`.
-2. Apply `migrations/0003_dashboard_staff_access.sql` after the first two migrations.
+2. Apply migrations through `migrations/0004_scheduled_publishing.sql` in filename order.
 3. Add `SUPABASE_PUBLISHABLE_KEY` to `.dev.vars`. This key is safe for browser authentication; the service-role credential remains Worker-only.
 4. Run the Worker with `npm run dev`.
 5. In another terminal, run `npm run dev:dashboard` for Vite hot reload.

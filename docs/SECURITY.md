@@ -27,7 +27,7 @@ RLS is enabled for all application tables, including staff profiles. No anon/aut
 
 ## Outbound safety
 
-Database settings independently control global, posting, comment, and Messenger automation. `OUTBOUND_ACTIONS_ENABLED` is a second deployment-level gate. Both must allow an action before a future publisher/replier may call Meta. Checked-in development, staging, and production configuration keeps the deployment-level gate off.
+Database settings independently control global, posting, comment, and Messenger automation. `OUTBOUND_ACTIONS_ENABLED` is a second deployment-level gate. Both must allow an action before the publisher or a future replier may call Meta. The publisher re-reads database switches before every post, and checked-in development, staging, and production configuration keeps the deployment-level gate off.
 
 ## Logging
 

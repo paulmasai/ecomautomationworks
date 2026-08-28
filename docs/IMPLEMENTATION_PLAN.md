@@ -32,16 +32,16 @@ Status: ingress implemented locally; async domain consumers belong to phases 4 a
 
 ## Phase 3 — scheduled publishing
 
-Status: not started. The atomic claim function and supporting tables exist.
+Status: implemented locally with mocked Meta calls; migration, staging configuration, and a controlled real-API acceptance test remain manual.
 
-- [ ] Automation-settings repository and cache policy
-- [ ] Due-post Cron handler
-- [ ] Text and single-image Meta publishers
-- [ ] Image accessibility/MIME/size validation
-- [ ] Daily post limit
-- [ ] Publication attempt ledger and duplicate tests
-- [ ] Error classification and bounded retry
-- [ ] Protected manual publish/cancel/retry operations
+- [x] Automation-settings repository with a no-cache policy for safety switches
+- [x] Due-post Cron handler
+- [x] Text and single-image Meta publishers
+- [x] Image accessibility/MIME/size validation
+- [x] Daily post limit
+- [x] Publication attempt ledger and duplicate tests
+- [x] Error classification and bounded retry
+- [x] Protected manual publish/cancel/retry operations
 
 ## Phase 4 — comment automation
 
@@ -75,6 +75,7 @@ Status: partially started.
 - [x] Structured log redaction baseline
 - [x] Audit/failure schema
 - [x] Global outbound-safe environment switch
+- [x] Pull-request type-check, test, and dry-run build workflow
 - [ ] Authenticated internal endpoints and rate limiting
 - [ ] Audit writes for all required actions
 - [ ] Retention, deletion, and anonymization operations
@@ -91,7 +92,7 @@ Status: functional vertical slice implemented locally; live deployment and platf
 - [x] Read-only overview, catalogue, posts, failures, audit, and team APIs
 - [x] Post drafting and MFA-protected approval
 - [x] Guarded automation switches, retry requests, invitations, and access changes
-- [ ] Manual publish action after the Phase 3 publisher exists
+- [x] MFA-protected publish-now, retry, and cancel requests
 - [ ] Comment and Messenger statistics after Phases 4 and 5 normalize events
 - [ ] Staging Auth email, redirect, MFA, bootstrap, and role acceptance tests
 

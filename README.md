@@ -8,7 +8,7 @@ The project is being implemented in the phases defined by the source specificati
 
 - Phase 1 — foundation: implemented
 - Phase 2 — webhook ingress foundation: implemented
-- Phase 3 — scheduled publishing: not yet implemented
+- Phase 3 — scheduled publishing: implemented locally with outbound-safe defaults
 - Phase 4 — comment automation: not yet implemented
 - Phase 5 — Messenger automation: not yet implemented
 - Phase 6 — production hardening and complete operations documentation: in progress
@@ -22,11 +22,12 @@ The current Worker provides:
 - 256 KiB ingress limit
 - durable, idempotent Supabase webhook ingestion
 - optional Cloudflare Queue dispatch with a database-backed fallback
+- a five-minute scheduled publisher with fresh-read kill switches, daily limits, publication-attempt idempotency, bounded retry, and text/single-image Meta clients
 - structured logs with sensitive-field redaction
 - a normalized release-one schema, RLS, indexes, and seed data
 - a responsive staff dashboard with Supabase Auth, role-aware read APIs, post drafting/approval, guarded automation controls, failures, audit history, and team access
 
-Outbound posting and replies are deliberately disabled. The repository has not been deployed and no real Meta or Supabase API operation is claimed.
+Outbound posting and replies remain disabled in every checked-in environment. The publisher is covered by mocks, but the repository has not been deployed and no real Meta or Supabase API operation is claimed.
 
 ## Local setup
 
@@ -40,8 +41,6 @@ npm test
 npm run dev
 ```
 
-Add the browser-safe `SUPABASE_PUBLISHABLE_KEY` to `.dev.vars` before starting the dashboard. The existing `.env.example` may be extended after any local uncommitted configuration change is reconciled.
-
 Use placeholder values locally. Do not commit `.dev.vars`, service-role keys, app secrets, or Page tokens.
 
 ## Database setup
@@ -51,7 +50,8 @@ Apply migrations in filename order, then apply the seed data:
 1. `migrations/0001_initial_schema.sql`
 2. `migrations/0002_product_images_bucket.sql`
 3. `migrations/0003_dashboard_staff_access.sql`
-4. `seeds/0001_initial_data.sql`
+4. `migrations/0004_scheduled_publishing.sql`
+5. `seeds/0001_initial_data.sql`
 
 The seed is safe by default: every outbound switch is off, maintenance mode is on, and the example product is inactive and out of stock.
 
@@ -72,6 +72,7 @@ Deployment commands require manual Cloudflare and secret configuration first. `O
 - [Architecture](docs/ARCHITECTURE.md)
 - [Containers and GHCR](docs/CONTAINERS.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
+- [Scheduled publishing](docs/SCHEDULED_PUBLISHING.md)
 - [Security](docs/SECURITY.md)
 - [Staff dashboard](docs/DASHBOARD.md)
 

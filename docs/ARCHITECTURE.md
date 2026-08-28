@@ -32,8 +32,8 @@ Supabase PostgreSQL + Storage <------> Cloudflare Worker
 - Webhook ingress: verifies the exact raw body with `X-Hub-Signature-256`, validates the JSON shape, atomically stores it, and acknowledges Meta quickly.
 - Durable event ledger: `meta_webhook_events` is both the audit source and database queue fallback. Queue availability is an optimization, not a durability requirement.
 - Queue processors: normalize comment and Messenger events and invoke the appropriate rule-based automation. These arrive in phases 4 and 5.
-- Scheduled publisher: Cron claims a bounded batch with `FOR UPDATE SKIP LOCKED`, checks settings/product state, and calls Meta. This arrives in phase 3.
-- Retry processor: claims only due retryable failures, applies bounded exponential backoff, and sends non-retryable failures to human review.
+- Scheduled publisher: Cron claims a bounded batch with `FOR UPDATE SKIP LOCKED`, re-reads safety switches before every post, checks Page/product/image state and the daily limit, and calls Meta only when every gate permits it.
+- Retry processor: due failed posts are reclaimed by the same Cron flow, use at most three attempts with bounded backoff, and send non-retryable or unknown-outcome failures to human review.
 - Meta client: owns Graph API request validation, timeouts, response schemas, and error classification.
 - Supabase access: uses REST/RPC through Worker-native `fetch`; no Node.js-only API is required.
 
@@ -58,12 +58,12 @@ Supabase PostgreSQL + Storage <------> Cloudflare Worker
 
 ### Scheduled publication (phase 3)
 
-1. Cron loads automation controls and the current daily count.
+1. Cron recovers stale claims for human review, checks the deployment kill switch, and loads fresh database automation controls.
 2. `claim_due_facebook_posts` atomically locks a small due batch.
 3. The publisher validates the post, linked product, stock, caption, image, and Page configuration.
 4. A publication-attempt idempotency key is inserted before the Meta call.
 5. Meta receives either a text post or one image post.
-6. Success stores the Meta post ID and audit event; failure is classified and scheduled or escalated.
+6. Success stores the Meta post ID and audit event; failure is classified and scheduled or escalated. An ambiguous transport outcome is never retried automatically because doing so could duplicate a Page post.
 
 ## Database design
 
@@ -133,6 +133,6 @@ The application checks are paired with database uniqueness constraints so concur
 ### Cloudflare
 
 - Create Worker environments and set every secret with Wrangler or the dashboard.
-- Add the Cron Trigger when phase 3 is present.
+- Deploy the checked-in five-minute Cron Trigger only after migration `0004_scheduled_publishing.sql` is applied.
 - Create and bind the Queue when the event consumer is present.
 - Configure production routes, logs, rollback access, and edge rate limiting.
