@@ -3,6 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2026-07-30"
 workers_dev = true
 
+[triggers]
+crons = [ "*/5 * * * *" ]
+
 [assets]
 directory = "./dashboard/dist"
 binding = "ASSETS"
@@ -24,5 +27,5 @@ ENVIRONMENT = "production"
 LOG_LEVEL = "info"
 OUTBOUND_ACTIONS_ENABLED = "false"
 
-# Queue bindings and the Cron Trigger are introduced with their processors in
-# phases 3-5. Until then, meta_webhook_events is the durable database queue.
+# Queue bindings are introduced with their phase 4-5 consumers. Until then,
+# meta_webhook_events remains the durable database queue.

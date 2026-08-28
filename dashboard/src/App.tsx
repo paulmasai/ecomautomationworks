@@ -103,6 +103,13 @@ function shortTime(value: string | null): string {
   }).format(new Date(value));
 }
 
+export function nairobiScheduleToIso(value: string): string | null {
+  if (value === "") return null;
+  const parsed = new Date(`${value}:00+03:00`);
+  if (Number.isNaN(parsed.getTime())) throw new Error("Invalid publication schedule");
+  return parsed.toISOString();
+}
+
 function relativeTime(value: string): string {
   const minutes = Math.round((Date.now() - new Date(value).getTime()) / 60_000);
   if (minutes < 1) return "Just now";
@@ -368,7 +375,8 @@ function PublishingView({ posts, canWrite, canApprove, manualPublish, demo, onCh
       setShowComposer(false);
       return;
     }
-    await apiRequest("/posts", { method: "POST", body: JSON.stringify({ caption, postType: "text", scheduledAt: scheduledAt || null }) });
+    const scheduledAtIso = nairobiScheduleToIso(scheduledAt);
+    await apiRequest("/posts", { method: "POST", body: JSON.stringify({ caption, postType: "text", scheduledAt: scheduledAtIso }) });
     setShowComposer(false);
     setCaption("");
     setScheduledAt("");
@@ -382,6 +390,34 @@ function PublishingView({ posts, canWrite, canApprove, manualPublish, demo, onCh
     }
     await apiRequest(`/posts/${id}/approve`, { method: "POST" });
     await onChanged();
+  }
+
+  async function requestPostOperation(id: string, operation: "cancel" | "publish" | "retry") {
+    if (demo) {
+      setMessage(`${pretty(operation)} requested in demo mode.`);
+      return;
+    }
+    await apiRequest(`/posts/${id}/${operation}`, { method: "POST" });
+    await onChanged();
+  }
+
+  function actions(post: PostSummary) {
+    if (!canApprove) return <span className="muted">—</span>;
+    if (post.approvalStatus === "pending") {
+      return <button className="small-button" onClick={() => void approve(post.id)}><Check size={14} /> Approve</button>;
+    }
+    if (post.approvalStatus !== "approved" || ["published", "cancelled", "processing"].includes(post.status)) {
+      return <span className="muted">—</span>;
+    }
+    return (
+      <div className="table-actions">
+        <button className="small-button" disabled={!manualPublish} onClick={() => void requestPostOperation(post.id, post.status === "failed" ? "retry" : "publish")}>
+          {post.status === "failed" ? <RefreshCcw size={14} /> : <Send size={14} />}
+          {post.status === "failed" ? "Retry" : "Publish"}
+        </button>
+        <button className="small-button" onClick={() => void requestPostOperation(post.id, "cancel")}><X size={14} /> Cancel</button>
+      </div>
+    );
   }
 
   return (
@@ -398,7 +434,7 @@ function PublishingView({ posts, canWrite, canApprove, manualPublish, demo, onCh
       )}
       <DataTable>
         <thead><tr><th>Post</th><th>Type</th><th>Schedule</th><th>Approval</th><th>Status</th><th aria-label="Actions" /></tr></thead>
-        <tbody>{posts.map((post) => <tr key={post.id}><td className="wide-cell"><strong>{post.productName ?? "General Page update"}</strong><small>{post.caption}</small></td><td>{pretty(post.postType)}</td><td>{shortTime(post.scheduledAt)}</td><td><StatusPill value={post.approvalStatus} /></td><td><StatusPill value={post.status} /></td><td>{canApprove && post.approvalStatus === "pending" ? <button className="small-button" onClick={() => void approve(post.id)}><Check size={14} /> Approve</button> : post.approvalStatus === "approved" ? <button className="small-button" disabled={!manualPublish} title={manualPublish ? "Publish now" : "Available after the scheduled publisher is implemented"}><Send size={14} /> Publish</button> : <span className="muted">—</span>}</td></tr>)}</tbody>
+        <tbody>{posts.map((post) => <tr key={post.id}><td className="wide-cell"><strong>{post.productName ?? "General Page update"}</strong><small>{post.caption}</small></td><td>{pretty(post.postType)}</td><td>{shortTime(post.scheduledAt)}</td><td><StatusPill value={post.approvalStatus} /></td><td><StatusPill value={post.status} /></td><td>{actions(post)}</td></tr>)}</tbody>
       </DataTable>
     </section>
   );

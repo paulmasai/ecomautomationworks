@@ -132,6 +132,7 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .primary-button:hover { background: var(--blue-dark); }
 .secondary-button { min-height: 38px; padding: 0 13px; border: 1px solid var(--line); background: #fff; color: #39465a; font-size: .73rem; }
 .small-button { min-height: 31px; padding: 0 9px; border: 1px solid #d6deea; background: #fff; color: #3b4a60; font-size: .66rem; white-space: nowrap; }
+.table-actions { display: flex; align-items: center; gap: 6px; }
 .icon-button { width: 34px; height: 34px; border: 1px solid var(--line); background: #fff; color: #667387; }
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 740px; }

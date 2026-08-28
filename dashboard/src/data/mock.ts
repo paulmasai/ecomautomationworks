@@ -35,10 +35,10 @@ export const mockSession: SessionPayload = {
   ],
   assuranceLevel: "aal2",
   capabilities: {
-    scheduledPublishing: false,
+    scheduledPublishing: true,
     commentAutomation: false,
     messengerAutomation: false,
-    manualPublish: false,
+    manualPublish: true,
   },
 };
 

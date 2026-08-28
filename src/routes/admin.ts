@@ -123,10 +123,10 @@ interface AdminDependencies {
 
 function capabilities() {
   return {
-    scheduledPublishing: false,
+    scheduledPublishing: true,
     commentAutomation: false,
     messengerAutomation: false,
-    manualPublish: false,
+    manualPublish: true,
   };
 }
 
@@ -457,6 +457,86 @@ async function routeAuthenticated(request: Request, dependencies: AdminDependenc
     });
     await writeAudit(dependencies.database, session, dependencies.requestId, "post_approved", "facebook_post", id.data);
     return jsonResponse({ status: "approved" });
+  }
+
+  const publishMatch = path.match(/^\/posts\/([0-9a-f-]+)\/publish$/i);
+  if (request.method === "POST" && publishMatch !== null) {
+    requirePermission(session, "posts.approve");
+    requirePrivilegedMfa(session);
+    const id = uuid.safeParse(publishMatch[1]);
+    if (!id.success) throw new AdminRouteError(404, "not_found");
+    const now = new Date().toISOString();
+    const rows = await dependencies.database.updateReturning("facebook_posts", {
+      id: `eq.${id.data}`,
+      approval_status: "eq.approved",
+      status: "in.(approved,scheduled,failed)",
+      meta_post_id: "is.null",
+      processing_lock: "is.null",
+    }, {
+      status: "scheduled",
+      scheduled_at: now,
+      next_retry_at: now,
+      last_error: null,
+    });
+    if (rows.length !== 1) throw new AdminRouteError(409, "post_not_publishable");
+    await writeAudit(dependencies.database, session, dependencies.requestId, "post_publish_requested", "facebook_post", id.data);
+    return jsonResponse({ status: "publish_requested" }, 202);
+  }
+
+  const postRetryMatch = path.match(/^\/posts\/([0-9a-f-]+)\/retry$/i);
+  if (request.method === "POST" && postRetryMatch !== null) {
+    requirePermission(session, "posts.approve");
+    requirePrivilegedMfa(session);
+    const id = uuid.safeParse(postRetryMatch[1]);
+    if (!id.success) throw new AdminRouteError(404, "not_found");
+    const now = new Date().toISOString();
+    const rows = await dependencies.database.updateReturning("facebook_posts", {
+      id: `eq.${id.data}`,
+      approval_status: "eq.approved",
+      status: "eq.failed",
+      meta_post_id: "is.null",
+      processing_lock: "is.null",
+    }, {
+      status: "scheduled",
+      scheduled_at: now,
+      next_retry_at: now,
+      last_error: null,
+    });
+    if (rows.length !== 1) throw new AdminRouteError(409, "post_not_retryable");
+    await writeAudit(dependencies.database, session, dependencies.requestId, "post_retry_requested", "facebook_post", id.data);
+    return jsonResponse({ status: "retry_requested" }, 202);
+  }
+
+  const cancelMatch = path.match(/^\/posts\/([0-9a-f-]+)\/cancel$/i);
+  if (request.method === "POST" && cancelMatch !== null) {
+    requirePermission(session, "posts.approve");
+    requirePrivilegedMfa(session);
+    const id = uuid.safeParse(cancelMatch[1]);
+    if (!id.success) throw new AdminRouteError(404, "not_found");
+    const now = new Date().toISOString();
+    const rows = await dependencies.database.updateReturning("facebook_posts", {
+      id: `eq.${id.data}`,
+      status: "in.(draft,pending_approval,approved,scheduled,failed)",
+      meta_post_id: "is.null",
+      processing_lock: "is.null",
+    }, {
+      status: "cancelled",
+      next_retry_at: null,
+      processing_lock: null,
+      locked_at: null,
+    });
+    if (rows.length !== 1) throw new AdminRouteError(409, "post_not_cancellable");
+    await dependencies.database.update("automation_failures", {
+      related_entity_type: "eq.facebook_post",
+      related_entity_id: `eq.${id.data}`,
+      resolved_at: "is.null",
+    }, {
+      resolved_at: now,
+      resolved_by_staff_id: session.profile.id,
+      human_review_required: false,
+    });
+    await writeAudit(dependencies.database, session, dependencies.requestId, "post_cancelled", "facebook_post", id.data);
+    return jsonResponse({ status: "cancelled" });
   }
 
   const automationMatch = path.match(/^\/automation\/([a-z_]+)$/);
