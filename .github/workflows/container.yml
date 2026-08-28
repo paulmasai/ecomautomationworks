@@ -108,6 +108,7 @@ jobs:
           printf '%s\n' \
             'SUPABASE_URL="https://example.supabase.co"' \
             'SUPABASE_SERVICE_ROLE_KEY="smoke-service-role-key-123456789"' \
+            'SUPABASE_PUBLISHABLE_KEY="smoke-publishable-key-123456789"' \
             'META_APP_ID="smoke-app-id"' \
             'META_APP_SECRET="smoke-app-secret-123456789"' \
             'META_PAGE_ID="smoke-page-id"' \
