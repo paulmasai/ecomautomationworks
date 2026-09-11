@@ -15,6 +15,8 @@ import type { Logger } from "../logging/logger";
 import { constantTimeStringEqual } from "../security/constant-time";
 import { consumeAdminRequest } from "../security/rate-limit";
 import { jsonResponse } from "../utilities/http";
+import { completionSchema } from "../privacy/requests";
+import { BodyError, readLimitedBody } from "../privacy/body";
 
 const uuid = z.uuid();
 const staffRoleSchema = z.enum(staffRoles);
@@ -391,6 +393,34 @@ async function routeAuthenticated(request: Request, dependencies: AdminDependenc
   const path = url.pathname.slice("/api/admin".length) || "/";
   if (!consumeAdminRequest(session.profile.userId)) throw new StaffAuthError(429, "rate_limited");
 
+  if (path === "/privacy/requests" || path.startsWith("/privacy/requests/")) {
+    requirePermission(session, "privacy.manage");
+    requirePrivilegedMfa(session);
+    if (request.method === "GET" && path === "/privacy/requests") {
+      const items = await dependencies.database.select("data_deletion_requests", {
+        select: "id,source,contact,reference,meta_user_id,meta_app_id,status,created_at,completed_at",
+        status: "eq.pending", order: "created_at.asc", limit: "100",
+      });
+      return jsonResponse({ items });
+    }
+    const match = path.match(/^\/privacy\/requests\/([0-9a-f-]+)\/complete$/i);
+    if (request.method === "POST" && match !== null) {
+      const id = uuid.safeParse(match[1]);
+      const body = await readLimitedBody(request);
+      const parsed = completionSchema.safeParse(JSON.parse(body));
+      if (!id.success || !parsed.success) throw new AdminRouteError(400, "invalid_deletion_confirmation");
+      if (parsed.data.subjectIds.includes(dependencies.config.META_PAGE_ID)) throw new AdminRouteError(400, "page_id_is_not_a_person");
+      const rawResult = await dependencies.database.rpc<unknown>("complete_data_deletion_request", {
+        p_request_id: id.data, p_subject_ids: [...new Set(parsed.data.subjectIds)],
+        p_verification: parsed.data.verification, p_actor_id: session.profile.userId,
+      });
+      const result = z.object({ status: z.enum(["completed", "not_found"]) }).parse(rawResult);
+      if (result.status === "not_found") throw new AdminRouteError(404, "deletion_request_not_found");
+      return jsonResponse({ status: result.status });
+    }
+    throw new AdminRouteError(404, "not_found");
+  }
+
   if (request.method === "GET" && path === "/session") return jsonResponse(sessionPayload(session));
   if (request.method === "GET" && path === "/overview") return handleOverview(dependencies, session);
   if (request.method === "GET" && path === "/products") {
@@ -616,6 +646,8 @@ export async function handleStaffBootstrap(request: Request, dependencies: Admin
 }
 
 function errorResponse(error: unknown, logger: Logger): Response {
+  if (error instanceof BodyError) return jsonResponse({ error: "invalid_request_body" }, error.status);
+  if (error instanceof SyntaxError) return jsonResponse({ error: "invalid_json" }, 400);
   if (error instanceof StaffAuthError) return jsonResponse({ error: error.code }, error.status);
   if (error instanceof AdminRouteError) return jsonResponse({ error: error.code }, error.status);
   if (error instanceof DatabaseError) {

@@ -125,6 +125,10 @@ export async function handleMetaWebhookDelivery(
     return jsonResponse({ error: "event_storage_unavailable" }, 503);
   }
 
+  if (ingestion.ignored) {
+    return textResponse("EVENT_RECEIVED");
+  }
+
   if (ingestion.duplicate) {
     dependencies.logger.info("meta.webhook.duplicate", {
       webhook_event_id: ingestion.eventId,

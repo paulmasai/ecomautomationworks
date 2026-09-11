@@ -11,6 +11,8 @@ import {
   handleStaffBootstrap,
 } from "./routes/admin";
 import { handleHealth } from "./routes/health";
+import { handlePrivacyRequest } from "./routes/privacy";
+import { policyPage } from "./privacy/pages";
 import {
   handleMetaWebhookDelivery,
   handleMetaWebhookVerification,
@@ -32,10 +34,19 @@ export function createApp(dependencies: AppDependencies = {}) {
     const requestId = crypto.randomUUID();
 
     try {
+      const url = new URL(request.url);
+      // Public notices must remain readable during an Auth or database outage.
+      if (request.method === "GET") {
+        const page = policyPage(url.pathname.replace(/\/$/, ""), env);
+        if (page !== null) return page;
+      }
       const config = loadConfig(env);
       const logger = createLogger(config, { request_id: requestId });
-      const url = new URL(request.url);
       const database = dependencies.database ?? new SupabaseDatabase(config);
+
+      if (url.pathname === "/data-deletion" || url.pathname.startsWith("/data-deletion/status/") || url.pathname === "/webhooks/meta/data-deletion") {
+        return await handlePrivacyRequest(request, config, database);
+      }
 
       if (request.method === "GET" && url.pathname === "/health") {
         return handleHealth(config);

@@ -26,6 +26,7 @@ The current Worker provides:
 - structured logs with sensitive-field redaction
 - a normalized release-one schema, RLS, indexes, and seed data
 - a responsive staff dashboard with Supabase Auth, role-aware read APIs, post drafting/approval, guarded automation controls, failures, audit history, and team access
+- public privacy/terms/deletion pages, a signed Meta deletion callback, an owner/MFA deletion review queue, and scheduled retention cleanup
 
 Outbound posting and replies remain disabled in every checked-in environment. The publisher is covered by mocks, but the repository has not been deployed and no real Meta or Supabase API operation is claimed.
 
@@ -51,7 +52,8 @@ Apply migrations in filename order, then apply the seed data:
 2. `migrations/0002_product_images_bucket.sql`
 3. `migrations/0003_dashboard_staff_access.sql`
 4. `migrations/0004_scheduled_publishing.sql`
-5. `seeds/0001_initial_data.sql`
+5. `migrations/20260909222541_privacy_deletion_retention.sql`
+6. `seeds/0001_initial_data.sql`
 
 The seed is safe by default: every outbound switch is off, maintenance mode is on, and the example product is inactive and out of stock.
 
@@ -75,5 +77,8 @@ Deployment commands require manual Cloudflare and secret configuration first. `O
 - [Scheduled publishing](docs/SCHEDULED_PUBLISHING.md)
 - [Security](docs/SECURITY.md)
 - [Staff dashboard](docs/DASHBOARD.md)
+- [Privacy, data deletion, and Meta readiness](docs/PRIVACY_AND_META_REVIEW.md)
+
+The public policy identity is configured as MobDeals Online Store, `mobdealskenya@gmail.com`, 00100 Nairobi. Environments missing `PRIVACY_CONTROLLER_NAME`, `PRIVACY_CONTACT_EMAIL`, or `PRIVACY_POSTAL_ADDRESS` return a clearly labeled draft with HTTP 503. Review the privacy readiness document for database setup, exact Meta app URLs, owner verification, and remaining operational requirements.
 
 The original 27-page specification remains in the repository as `MobDeals Kenya Facebook Automation Service (1).pdf`.

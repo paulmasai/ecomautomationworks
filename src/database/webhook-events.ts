@@ -12,6 +12,7 @@ export interface WebhookEventInput {
 export interface IngestedWebhookEvent {
   eventId: string;
   duplicate: boolean;
+  ignored?: boolean;
 }
 
 export interface WebhookEventStore {
@@ -25,6 +26,7 @@ const ingestionResultSchema = z
     z.object({
       event_id: z.uuid(),
       is_duplicate: z.boolean(),
+      is_ignored: z.boolean().optional(),
     }),
   )
   .length(1);
@@ -51,6 +53,7 @@ export class SupabaseWebhookEventStore implements WebhookEventStore {
     return {
       eventId: result.event_id,
       duplicate: result.is_duplicate,
+      ignored: result.is_ignored ?? false,
     };
   }
 

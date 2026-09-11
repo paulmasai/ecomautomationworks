@@ -11,7 +11,7 @@ const levels: Readonly<Record<LogLevel, number>> = {
   error: 40,
 };
 
-const forbiddenKey = /authorization|cookie|message_text|phone|secret|token|body|payload/i;
+const forbiddenKey = /authorization|cookie|message_text|phone|secret|token|body|payload|email|contact|reference|signed_request|receipt|confirmation_code|subject|sender|commenter|user_id|ip_address/i;
 
 function sanitize(context: LogContext): Record<string, Exclude<LogValue, undefined>> {
   return Object.fromEntries(

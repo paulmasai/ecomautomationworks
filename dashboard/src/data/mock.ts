@@ -23,6 +23,7 @@ export const mockSession: SessionPayload = {
     lastSignedInAt: isoAt(-1),
   },
   permissions: [
+    "privacy.manage",
     "overview.read",
     "products.read",
     "posts.read",

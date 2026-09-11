@@ -36,6 +36,7 @@ import {
   mockTeam,
 } from "./data/mock";
 import { apiRequest, getSupabaseClient } from "./lib/api";
+import { PrivacyRequests } from "./PrivacyRequests";
 import type {
   ActivitySummary,
   CollectionPayload,
@@ -56,6 +57,7 @@ type View =
   | "failures"
   | "audit"
   | "team"
+  | "privacy"
   | "settings";
 
 const navItems: Array<{
@@ -70,6 +72,7 @@ const navItems: Array<{
   { id: "failures", label: "Failures", icon: AlertTriangle },
   { id: "audit", label: "Audit", icon: Activity },
   { id: "team", label: "Team & access", icon: Users },
+  { id: "privacy", label: "Data deletion", icon: ShieldCheck },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -80,6 +83,7 @@ const viewPermissions: Partial<Record<View, string>> = {
   failures: "failures.read",
   audit: "audit.read",
   team: "team.read",
+  privacy: "privacy.manage",
 };
 
 const roleLabels: Record<StaffRole, string> = {
@@ -243,6 +247,7 @@ function LoginScreen({ onAuthenticated }: { onAuthenticated: () => Promise<void>
             {busy ? "Signing in…" : "Sign in"}<ChevronRight size={17} />
           </button>
           <button className="text-button" type="button" onClick={() => void resetPassword()}>Forgot password?</button>
+          <nav className="policy-links" aria-label="Policies"><a href="/privacy-policy">Privacy policy</a><a href="/data-deletion">User data deletion</a><a href="/terms">Terms</a></nav>
           {import.meta.env.DEV && (
             <a className="demo-link" href="/?demo=1">Open local UI preview</a>
           )}
@@ -684,7 +689,9 @@ export function App() {
   if (session === null) return <LoginScreen onAuthenticated={async () => { setLoading(true); await refresh().finally(() => setLoading(false)); }} />;
 
   const pageTitle = navItems.find((item) => item.id === view)?.label ?? "Overview";
-  const content = view === "overview"
+  const content = view === "privacy" && can("privacy.manage")
+    ? <PrivacyRequests demo={demo} hasMfa={session.assuranceLevel === "aal2"} />
+    : view === "overview"
     ? <Overview overview={overview} onNavigate={setView} />
     : view === "catalogue"
       ? <CatalogueView products={filteredProducts} />
@@ -720,6 +727,7 @@ export function App() {
           {session.assuranceLevel !== "aal2" && ["owner", "automation_manager"].includes(session.profile.role) && <button className="mfa-banner" onClick={() => setView("settings")}><ShieldCheck size={18} /><span><strong>Complete MFA to unlock protected changes.</strong> Read-only access remains available.</span><ChevronRight size={17} /></button>}
           {error && <div className="error-banner"><AlertTriangle size={18} /><span>{error}</span><button onClick={() => void refresh()}><RefreshCcw size={15} /> Retry</button></div>}
           {content}
+          <nav className="policy-links" aria-label="Policies"><a href="/privacy-policy">Privacy policy</a><a href="/data-deletion">User data deletion</a><a href="/terms">Terms</a></nav>
         </div>
       </main>
       <nav className="mobile-tabs" aria-label="Mobile navigation">{visibleNavItems.slice(0, 4).map(({ id, label, icon: Icon }) => <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)}><Icon size={19} /><span>{label}</span></button>)}<button onClick={() => setMenuOpen(true)}><Menu size={19} /><span>More</span></button></nav>

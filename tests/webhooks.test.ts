@@ -100,6 +100,20 @@ describe("Worker routes", () => {
 });
 
 describe("Meta webhook delivery", () => {
+  it("does not enqueue a delivery suppressed by a prior deletion", async () => {
+    const store = new InMemoryWebhookEventStore();
+    store.ingest = async () => ({ eventId: "90000000-0000-4000-8000-000000000001", duplicate: false, ignored: true });
+    const sent: MetaEventQueueMessage[] = [];
+    const env = makeEnv({ META_EVENTS_QUEUE: makeQueue(sent) });
+    const execution = makeExecutionContext();
+    const body = JSON.stringify(validCommentPayload);
+    const response = await createApp({ webhookEventStore: store })(new Request("https://worker.example/webhooks/meta", {
+      method: "POST", headers: { "x-hub-signature-256": await signBody(body, env.META_APP_SECRET) }, body,
+    }), env, execution.context);
+    await execution.flush();
+    expect(response.status).toBe(200);
+    expect(sent).toHaveLength(0);
+  });
   it("stores a valid signed webhook and dispatches it once", async () => {
     const store = new InMemoryWebhookEventStore();
     const sent: MetaEventQueueMessage[] = [];

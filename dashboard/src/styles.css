@@ -20,6 +20,20 @@
 }
 
 * { box-sizing: border-box; }
+.policy-links { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 24px; font-size: .8rem; }
+.policy-links a, .privacy-workspace a { color: var(--blue-dark); text-underline-offset: 3px; }
+.policy-links a:focus-visible, .privacy-workspace :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.privacy-workspace { line-height: 1.6; }
+.privacy-workspace p { max-width: 72ch; overflow-wrap: anywhere; }
+.privacy-request-list { list-style: none; padding: 0; }
+.privacy-request-list li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.privacy-request-list p { margin: 4px 0 0; color: #526077; }
+.privacy-request-list strong { overflow-wrap: anywhere; }
+.privacy-review { max-width: 72ch; margin-top: 32px; }
+.privacy-review label { display: grid; gap: 8px; margin-top: 20px; font-weight: 600; }
+.privacy-review input, .privacy-review select, .privacy-review textarea { width: 100%; color: var(--ink); background: white; border: 1px solid #738096; border-radius: 8px; padding: 12px; font: inherit; }
+.privacy-review textarea { min-height: 100px; resize: vertical; }
+.privacy-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }

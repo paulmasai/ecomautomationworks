@@ -31,13 +31,18 @@ Database settings independently control global, posting, comment, and Messenger 
 
 ## Logging
 
-Structured logger fields matching authorization, cookies, secrets, tokens, payload/body content, messages, or phone information are replaced with `[REDACTED]`. Upstream error bodies are not copied into logs or API responses. Customer message bodies must remain in the private database only when operationally required.
+Structured logger fields matching authorization, cookies, secrets, tokens, payload/body content, messages, phone/contact information, subjects, and deletion receipts are replaced with `[REDACTED]`. Upstream error bodies are not copied into logs or API responses. Customer message bodies must remain in the private database only when operationally required. Provider request logs need separate URL redaction, especially private deletion status links.
+
+## Privacy operations
+
+Public deletion requests are unverified intake, never authorization to erase data. Signed Meta callbacks authenticate the app-scoped identifier, but Page/Messenger mappings still require verification. Only active owners with MFA can inspect requests or submit customer deletion. Deletion and completion are atomic; private tables/functions are service-role only. Daily keyed IP hashes rate-limit public form submissions without persisting raw IP addresses.
+
+The scheduled Worker runs privacy retention independently of publication. See [Privacy and Meta review](PRIVACY_AND_META_REVIEW.md) for exact limits, restore/replay handling, staff offboarding, rights requests, and outstanding deployment controls.
 
 ## Remaining security work
 
-- Add authenticated internal operations routes with constant-time bearer validation.
 - Add Cloudflare edge rate limiting for internal routes.
-- Implement data retention, deletion, and anonymization jobs.
+- Configure provider retention, backup deletion replay, and privacy-operation alerts.
 - Add audit writes for every sensitive operation.
 - Document incident response, secret rotation, and rollback.
 - Review current Meta permissions and policies immediately before deployment.

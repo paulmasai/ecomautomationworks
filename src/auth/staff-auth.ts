@@ -15,6 +15,7 @@ export type AssuranceLevel = "aal1" | "aal2";
 
 const permissionsByRole = {
   owner: [
+    "privacy.manage",
     "overview.read",
     "products.read",
     "posts.read",

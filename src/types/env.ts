@@ -12,6 +12,9 @@ export interface Env {
   ENVIRONMENT: string;
   LOG_LEVEL: string;
   OUTBOUND_ACTIONS_ENABLED?: string;
+  PRIVACY_CONTROLLER_NAME?: string;
+  PRIVACY_CONTACT_EMAIL?: string;
+  PRIVACY_POSTAL_ADDRESS?: string;
   META_EVENTS_QUEUE?: Queue<MetaEventQueueMessage>;
 }
 
