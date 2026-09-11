@@ -69,6 +69,8 @@ The seed is safe by default: every outbound switch is off, maintenance mode is o
 
 Deployment commands require manual Cloudflare and secret configuration first. `OUTBOUND_ACTIONS_ENABLED` remains `false` in every checked-in Wrangler environment.
 
+Wrangler uses distinct Worker names for each environment: `ecomautomationworks-development` for the default configuration, `ecomautomationworks-staging` for staging, and `ecomautomationworks` for production. Production serves `meta.ecomautomationworks.com` with its `workers.dev` route disabled. Use `npm run deploy:production` to select the production configuration explicitly.
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)

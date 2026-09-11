@@ -1,4 +1,5 @@
-name = "mobdeals-meta-automation-suite"
+# Keep unqualified development commands separate from the production Worker.
+name = "ecomautomationworks-development"
 main = "src/index.ts"
 compatibility_date = "2026-07-30"
 workers_dev = true
@@ -12,6 +13,7 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = [ "/api/*", "/health", "/webhooks/*", "/privacy", "/privacy/", "/privacy-policy", "/privacy-policy/", "/terms", "/terms/", "/terms-of-service", "/terms-of-service/", "/data-deletion", "/data-deletion/*" ]
 
+# ── Development (default, local wrangler dev) ────────────────────────
 [vars]
 ENVIRONMENT = "development"
 LOG_LEVEL = "debug"
@@ -20,6 +22,11 @@ PRIVACY_CONTROLLER_NAME = "MobDeals Online Store"
 PRIVACY_CONTACT_EMAIL = "mobdealskenya@gmail.com"
 PRIVACY_POSTAL_ADDRESS = "00100 Nairobi"
 
+# ── Staging ──────────────────────────────────────────────────────────
+[env.staging]
+name = "ecomautomationworks-staging"
+workers_dev = true
+
 [env.staging.vars]
 ENVIRONMENT = "staging"
 LOG_LEVEL = "info"
@@ -27,6 +34,15 @@ OUTBOUND_ACTIONS_ENABLED = "false"
 PRIVACY_CONTROLLER_NAME = "MobDeals Online Store"
 PRIVACY_CONTACT_EMAIL = "mobdealskenya@gmail.com"
 PRIVACY_POSTAL_ADDRESS = "00100 Nairobi"
+
+# ── Production ───────────────────────────────────────────────────────
+# Keep the production Worker name and custom domain stable.
+[env.production]
+name = "ecomautomationworks"
+workers_dev = false
+routes = [
+  { pattern = "meta.ecomautomationworks.com", custom_domain = true }
+]
 
 [env.production.vars]
 ENVIRONMENT = "production"
