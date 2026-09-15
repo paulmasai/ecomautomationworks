@@ -52,5 +52,22 @@ PRIVACY_CONTROLLER_NAME = "MobDeals Online Store"
 PRIVACY_CONTACT_EMAIL = "mobdealskenya@gmail.com"
 PRIVACY_POSTAL_ADDRESS = "00100 Nairobi"
 
+# Fail production deploys unless every runtime credential/binding is present
+# under the exact case-sensitive name consumed by the Worker. Values remain in
+# Cloudflare secrets and local .dev.vars; they are never committed here.
+[env.production.secrets]
+required = [
+  "SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "SUPABASE_PUBLISHABLE_KEY",
+  "META_APP_ID",
+  "META_APP_SECRET",
+  "META_PAGE_ID",
+  "META_PAGE_ACCESS_TOKEN",
+  "META_VERIFY_TOKEN",
+  "META_GRAPH_API_VERSION",
+  "INTERNAL_ADMIN_SECRET",
+]
+
 # Queue bindings are introduced with their phase 4-5 consumers. Until then,
 # meta_webhook_events remains the durable database queue.
